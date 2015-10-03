@@ -32,4 +32,4 @@ RUN		echo "bitcoin hard nofile 65536" >> /etc/security/limits.conf \
                   && rm -rf  /electrum-dash-server/*  \
 		  && rm -rf /etc/service/sshd
 
-RUN		chmod +x /etc/service/electrum-dash-server/run
+RUN		chmod +x /etc/service/electrum-server/run
