@@ -1,0 +1,52 @@
+#!/bin/sh
+set -e
+# note this depends on being on a phusion base image
+# other applicatiosn need another method to pass ENV values
+. /etc/container_environment.sh
+if [ -z ${COIN} ]
+then
+  COIN=${COIN:-dash}
+  echo "export COIN=${COIN}" >> /etc/container_environment.sh
+fi
+if [ -z ${COIN_SYM} ]
+then
+  COIN_SYM=${COIN_SYM:-dash}
+  echo "export COIN_SYM=${COIN_SYM}" >> /etc/container_environment.sh
+fi
+if [ -z ${COINDIR} ]
+then
+  COINDIR=${COINDIR:-/home/coin/.${COIN}}
+  echo "export COINDIR=${COINDIR}" >> /etc/container_environment.sh
+fi
+APP=electrum-dash-server
+USER=${USER:-coin}
+
+echo "$(date) Waiting for ${COIN}.conf in ${COINDIR}"
+while true
+do
+  test -f "${COINDIR}"/${COIN}.conf && break
+  sleep 1
+done
+echo "$(date) Allowing ${COIN}d 30sec to startup"
+sleep 30
+
+echo "Starting ${APP} for ${COIN}"
+cd /app
+
+
+if [ -d /home/${USER} ] ; then
+   chown ${USER}.${USER} /home/${USER}
+fi
+
+chmod +x /app/start.sh
+chown -R ${USER}.${USER} /app
+touch /var/log/electrum-dash-server.log
+touch /var/log/electrum-dash-server-${COIN_SYM}.log
+chown ${USER}.${USER} /var/log/electrum-dash-server.log
+chown ${USER}.${USER} /var/log/electrum-dash-server-${COIN_SYM}.log
+chown -R ${USER}.${USER} /var/electrum-dash-server
+chown ${USER}.${USER} /etc/electrum-dash-server.conf
+cp /etc/container_environment.sh /app/electrum-dash-server.env
+chown ${USER}.${SUSER} /app/electrum-dash-server.env
+chown -R ${USER}.${USER} /home/${USER}
+exec su ${USER} -c /app/start.sh
